@@ -189,6 +189,10 @@ class ReadyQueue {
             Thread.currentThread().interrupt();
             return null;
         }
+        // Stop if this permit was sent to wake CPUs during shutdown
+if (SharedStats.getCompletedProcessCount() >= SharedStats.totalProcesses) {
+    return null;
+}
         // Protect the queue while removing a process
         lock.lock();
         try {
@@ -209,8 +213,9 @@ class ReadyQueue {
     }
 
     public void wakeAll() {
-        semaphore.release(SharedStats.totalProcesses);
-    }
+    // Wake all CPU workers so they can terminate
+    semaphore.release(SharedStats.totalCPUs);
+}
 
     public Process processOf(Thread thread) {
 
